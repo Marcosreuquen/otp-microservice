@@ -2,16 +2,13 @@ from uuid import UUID
 from fastapi import Depends, status, HTTPException
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, UTC
-from sqlalchemy.orm import Session
-from app.models.db import get_session
-import app.models.tables as models
-
 
 from . import schemas
 from fastapi.security import OAuth2PasswordBearer
 from config import settings
+from .schemas import TokenData, Token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -35,19 +32,30 @@ def verify_access_token(token: str, credentials_exceptions):
 
         if id is None:
             raise credentials_exceptions
-        token_data: UUID = schemas.TokenData(id=id).id
+
+        expiration_date = payload.get("expiration_date")
+
+        if expiration_date is None:
+            raise credentials_exceptions
+
+        if datetime.now() > datetime.fromisoformat(expiration_date):
+            raise credentials_exceptions
+
+        token_data = schemas.TokenData(id=id, expiration_date=expiration_date)
     except JWTError:
         raise credentials_exceptions
     return token_data
 
 
-def get_current_user(
-    token: str
-):
-    credential_exception = HTTPException(
+def get_token(token:str):
+    credentials_exceptions = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    data = verify_access_token(token, credential_exception)
-    return data
+    [token_type, token] = str.split(token, sep=" ")
+
+    if not token or token_type.lower() != "bearer":
+        raise credentials_exceptions
+
+    return token

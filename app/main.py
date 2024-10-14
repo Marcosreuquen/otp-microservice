@@ -1,11 +1,10 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session
 from contextlib import asynccontextmanager
 
-from config import settings
+from .middlewares import CreateStateMiddleware
 from .routes import code, mfa, auth
-from .models.db import get_session, db
+from .models.db import db
 
 
 @asynccontextmanager
@@ -23,9 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(CreateStateMiddleware)
+
 @app.get("/", status_code=200)
-async def root(session: Session = Depends(get_session)):
-    print(session)
+async def root():
+    """Root endpoint."""
     return {}
 
 routes = [code, mfa, auth]

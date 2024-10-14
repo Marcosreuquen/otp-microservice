@@ -4,9 +4,13 @@ from datetime import datetime, UTC, timedelta
 import uuid
 from uuid import UUID
 
+from app.utils.enums import RecoveryMethod, OtpMethod
+
+
 class UserAppLink(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="user.id", primary_key=True)
     app_id: UUID = Field(foreign_key="app.id", primary_key=True)
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class User(SQLModel, table=True):
@@ -23,11 +27,11 @@ class AuthService(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="user.id")
     user: Optional[User] = Relationship(back_populates="auth_services")
     app_id: UUID = Field(foreign_key="app.id")
-    recovery_method: str = Field(max_length=50)
-    otp_method: str = Field(max_length=50)
+    recovery_method: RecoveryMethod = Field(max_length=50)
+    otp_method: OtpMethod = Field(max_length=50)
     otp_secret: str = Field(max_length=100)
     enabled: bool = Field(default=False, index=True)
-    expiration_date: Optional[datetime]
+    expiration_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC) + timedelta(days=365))
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 
 class App(SQLModel, table=True):
