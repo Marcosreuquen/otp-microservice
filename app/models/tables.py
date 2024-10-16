@@ -4,7 +4,7 @@ from datetime import datetime, UTC, timedelta
 import uuid
 from uuid import UUID
 
-from app.utils.enums import RecoveryMethod, OtpMethod
+from app.schemas.enums import RecoveryMethod, OtpMethod
 
 
 class UserAppLink(SQLModel, table=True):
@@ -38,6 +38,7 @@ class App(SQLModel, table=True):
     id: UUID = Field(default_factory=lambda: uuid.uuid4(), primary_key=True)
     name: str = Field(index=True, max_length=100)
     api_key_secret: str = Field(index=True, max_length=256)
+    owner_id: UUID = Field(foreign_key="user.id", unique=True, index=True)
     users: List["User"] = Relationship(back_populates="apps", link_model=UserAppLink)
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 

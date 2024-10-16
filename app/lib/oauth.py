@@ -1,14 +1,10 @@
 from uuid import UUID
-from fastapi import Depends, status, HTTPException
+from fastapi import status, HTTPException
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, UTC
 
-from . import schemas
-from fastapi.security import OAuth2PasswordBearer
+from app.schemas import schemas
 from config import settings
-from .schemas import TokenData, Token
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def create_access_token(data: dict):
     to_encode = data.copy()

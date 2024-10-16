@@ -344,4 +344,6 @@ Articles and tutorials used in this project:
 
 - [Securing Digital Assets with MFA and Python](https://medium.com/@diego_maia/securing-digital-assets-with-mfa-and-python-generating-time-based-one-time-passwords-totps-143f4ea06955)
 - [How Time-base One-Time Passwords work and why you should use them in your app.](https://www.freecodecamp.org/news/how-time-based-one-time-passwords-work-and-why-you-should-use-them-in-your-app-fdd2b9ed43c3/)
-- 
+- [Fastapi, a deep dive into clean code](https://medium.com/@dhruvahuja2330/fastapi-application-a-deep-dive-into-clean-code-folder-structure-and-database-integration-7a172417cae2)
+- [why fastapi is not production ready yet](https://python.plainenglish.io/this-is-why-fastapi-is-not-production-ready-yet-6c707823bd7c)
+- [how to structure your fastapi projects](https://medium.com/@amirm.lavasani/how-to-structure-your-fastapi-projects-0219a6600a8f)

@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from .middlewares import CreateStateMiddleware
-from .routes import code, mfa, auth
+from app.utils.middlewares import CreateStateMiddleware
+from .routes import codeRouter, mfaRouter, authRouter, appRouter
 from .models.db import db
 
 
@@ -29,6 +29,7 @@ async def root():
     """Root endpoint."""
     return {}
 
-routes = [code, mfa, auth]
+
+routes = [codeRouter, mfaRouter, authRouter, appRouter]
 for route in routes:
     app.include_router(route.router, prefix="/api")

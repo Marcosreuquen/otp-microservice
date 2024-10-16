@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 from uuid import UUID
 
 from app.models.tables import User
-from app.utils import schemas
+from app.schemas import schemas
 
 
 def get_user(username: str, session: Session) -> User | None:

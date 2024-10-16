@@ -3,7 +3,7 @@ from typing import Optional
 from uuid import UUID
 from datetime import datetime
 
-from app.utils.enums import OtpMethod, RecoveryMethod
+from app.schemas.enums import OtpMethod, RecoveryMethod
 
 
 class CreateUser(BaseModel):
@@ -31,6 +31,8 @@ class UserCredentials(BaseModel):
 
 class MFARegister(BaseModel):
     app_id: UUID
+    user_id: UUID
+    username: str
     otp_method: OtpMethod
     recovery_method: RecoveryMethod
 
@@ -41,3 +43,16 @@ class RecoveryMFAData(BaseModel):
     app_id: UUID
     recovery_method: RecoveryMethod
     otp_method: OtpMethod
+
+class CreateApp(BaseModel):
+    name: str
+
+class UpdateApp(BaseModel):
+    name: str
+
+class VerifyOTP(BaseModel):
+    otp: str
+    app_id: UUID
+
+class BodyWithUri(BaseModel):
+    uri: str

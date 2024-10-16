@@ -3,7 +3,6 @@ DATABASE_URL = settings.DATABASE_URL
 from .tables import User, AuthService, Auth, App, UserAppLink
 from sqlmodel import SQLModel, create_engine, Session
 from contextlib import contextmanager
-from functools import wraps
 
 class DB:
     def __init__(self, database_url: str = None):

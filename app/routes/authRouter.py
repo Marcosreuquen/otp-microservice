@@ -1,12 +1,10 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-
-import app.controllers.user as userController
-import app.controllers.auth as authController
-from app.utils import schemas
-from app.models.db import get_session
 from sqlmodel import Session
-import app.utils.jwt as jwt
-from app.utils import oauth
+
+from app.controllers import authController, userController
+from app.schemas import schemas
+from app.models.db import get_session
+from app.lib import jwt, oauth
 from app.models.tables import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])

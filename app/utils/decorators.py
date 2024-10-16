@@ -1,14 +1,14 @@
-from fastapi import Request, Response, HTTPException, status
+from fastapi import Request, HTTPException, status, Header
 from functools import wraps
+from typing import Annotated, Callable, Awaitable, Any
 
-from app.utils.oauth import get_token, verify_access_token
+from app.lib.oauth import get_token, verify_access_token
 
 
 def RequiresAuthentication(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         request: Request = kwargs.get("request")
-
         auth_header = request.headers.get("Authorization")
         if not auth_header:
             raise HTTPException(
@@ -32,6 +32,11 @@ def RequiresAuthentication(func):
             request.state.user_id = data.id
         finally:
             pass
-
         return await func(*args, **kwargs)
+    return wrapper
+
+def TestDecorator(func: Callable[[str, ...], Awaitable[Any]]) -> Callable[[str, ...], Awaitable[Any]]:
+    @wraps(func)
+    async def wrapper(*args, authorization: Annotated[str, Header()]=None, **kwargs):
+        return await func(*args, authorization, **kwargs)
     return wrapper

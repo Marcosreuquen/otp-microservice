@@ -3,18 +3,18 @@ from uuid import UUID
 from sqlmodel import Session, select
 
 from app.models.tables import AuthService
-from app.utils.otp import generate_secret
-from app.utils.schemas import MFARegister, RecoveryMFAData
+from app.lib.otp import generate_secret
+from app.schemas.schemas import MFARegister, RecoveryMFAData
 
 
-def register_mfa(user_id: UUID, data: MFARegister, session: Session):
+def register_mfa(data: MFARegister, session: Session):
     record = AuthService(
-        user_id=user_id,
+        user_id=data.user_id,
         app_id=data.app_id,
         recovery_method=data.recovery_method,
         otp_method=data.otp_method,
         otp_secret=generate_secret(),
-        enabled= True
+        enabled= False
     )
     session.add(record)
     session.commit()
@@ -80,3 +80,11 @@ def recovery_mfa(user_id: UUID, body: RecoveryMFAData, session: Session):
     session.refresh(record)
     succeed = record.recovery_method == body.recovery_method and record.otp_method == body.otp_method
     return succeed
+
+def get_secret(user_id: UUID, app_id: UUID, session: Session):
+    statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
+    record = session.exec(statement).first()
+
+    if not record:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Record not found")
+    return record.otp_secret
