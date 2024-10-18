@@ -3,13 +3,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.utils.middlewares import CreateStateMiddleware
+from config import settings
+from .models.clean_and_seed_data import drop_database, seed_data
 from .routes import codeRouter, mfaRouter, authRouter, appRouter
 from .models.db import db
+from .utils.logger import Logger
 
+ENV = settings.ENV
+is_dev = ENV == "dev"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db.init_db()
+    try:
+        Logger.warning("You are running in " + ENV + " mode.")
+        if is_dev:
+            drop_database()
+
+        db.init_db()
+
+        if is_dev:
+            seed_data()
+    except Exception as e:
+        Logger.error(e)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -26,7 +41,6 @@ app.add_middleware(CreateStateMiddleware)
 
 @app.get("/", status_code=200)
 async def root():
-    """Root endpoint."""
     return {}
 
 

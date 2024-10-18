@@ -1,8 +1,9 @@
 from config import settings
 DATABASE_URL = settings.DATABASE_URL
-from .tables import User, AuthService, Auth, App, UserAppLink
+from .tables import User, AuthService, Auth, App
 from sqlmodel import SQLModel, create_engine, Session
 from contextlib import contextmanager
+from app.utils.logger import Logger
 
 class DB:
     def __init__(self, database_url: str = None):
@@ -10,21 +11,21 @@ class DB:
         self.engine = create_engine(self.database_url)
 
     def create_db_and_tables(self):
-        """Crea las tablas definidas en los modelos de SQLModel."""
         SQLModel.metadata.create_all(self.engine)
 
     def init_db(self):
-        print("Creating tables on the database...")
+        Logger.info("Creating tables on the database.")
         self.create_db_and_tables()
-        print("Tables created successfully or already exist.")
+        Logger.info("Tables created successfully or already exist.")
 
     @contextmanager
     def session(self):
-        """Proporciona una sesión de base de datos y maneja el cierre de la sesión."""
+        Logger.info("Creating session.")
         session = Session(self.engine)
         try:
             yield session
         finally:
+            Logger.info("Closing session.")
             session.close()
 
 # global instance of DB

@@ -1,0 +1,105 @@
+{
+  "users": [
+    {
+      "id": "4b23859b-3b54-40e6-bafe-57d706b9aa55",
+      "username": "john_doe",
+      "email": "john.doe@example.com",
+      "phone_number": "+1234567890",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id": "12293a75-57e8-4f07-b0ab-b0e6f9bb85cb",
+      "username": "jane_smith",
+      "email": "jane.smith@example.com",
+      "phone_number": "+9876543210",
+      "created_at": "2022-01-01T00:00:00Z"
+
+    },
+    {
+      "id": "a124307f-c251-455d-ace7-583594ebb721",
+      "username": "alice_jones",
+      "email": "alice.jones@example.com",
+      "phone_number": "+1029384756",
+      "created_at": "2022-01-01T00:00:00Z"
+    }
+  ],
+  "apps": [
+    {
+      "id": "03bcf61b-b36e-4a3a-b6e1-8ebace3ae4a4",
+      "name": "ProjectManagementApp",
+      "api_key_secret": "pmapp_7h3s3cr3t",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id": "f4af77c2-3921-4b66-85dd-f66c905b9abe",
+      "name": "FinanceApp",
+      "api_key_secret": "finapp_s3cr3tk3y",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id": "dddf50b7-09c6-4e9f-96c7-40b2f5e2b6cc",
+      "name": "HealthTracker",
+      "api_key_secret": "healthtrk_a8d93kld",
+      "created_at": "2022-01-01T00:00:00Z"
+    }
+  ],
+  "services": [
+    {
+      "id":"3f44969c-8a1d-4051-938f-f450016fc4da",
+      "user_id": "4b23859b-3b54-40e6-bafe-57d706b9aa55",
+      "app_id": "03bcf61b-b36e-4a3a-b6e1-8ebace3ae4a4",
+      "recovery_method": "EMAIL",
+      "otp_method": "TOTP",
+      "enabled": true,
+      "expiration_date": "2024-11-12 03:48:13.363908",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id":"022bdb79-3d7d-40b3-bf64-6f7e18713003",
+      "user_id": "12293a75-57e8-4f07-b0ab-b0e6f9bb85cb",
+      "app_id": "f4af77c2-3921-4b66-85dd-f66c905b9abe",
+      "recovery_method": "SMS",
+      "otp_method": "SMS",
+      "enabled": true,
+      "expiration_date": "2024-11-12 03:48:13.363908",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id":"3bcedb68-840f-4646-a22b-137acd88542f",
+      "user_id": "a124307f-c251-455d-ace7-583594ebb721",
+      "app_id": "dddf50b7-09c6-4e9f-96c7-40b2f5e2b6cc",
+      "recovery_method": "EMAIL",
+      "otp_method": "WHATSAPP",
+      "enabled": false,
+      "expiration_date": "2024-11-12 03:48:13.363908",
+      "created_at": "2022-01-01T00:00:00Z"
+    }
+  ],
+  "auth": [
+    {
+      "id":"b6af66ed-aef5-46ac-99ee-36c9a5c5366e",
+      "user_id": "4b23859b-3b54-40e6-bafe-57d706b9aa55",
+      "password_hash": "$2b$12$bI57pfHRrIUpZI.bV6Q3ueMXN8i4FQdUyORRHXQ.Gl3G4oKSobVTW",
+      "token_type": "bearer",
+      "expires_at": "2024-11-12 03:48:13.363908",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id":"1b2b4b81-4f08-4178-81fc-9f6ecb6cbe95",
+      "user_id": "12293a75-57e8-4f07-b0ab-b0e6f9bb85cb",
+      "password_hash": "$2b$12$bI57pfHRrIUpZI.bV6Q3ueMXN8i4FQdUyORRHXQ.Gl3G4oKSobVTW",
+      "token_type": "bearer",
+      "expires_at": "2024-11-12 03:48:13.363908",
+      "created_at": "2022-01-01T00:00:00Z"
+    },
+    {
+      "id":"032cdc83-7e34-4b5f-bc71-0986e513e007",
+      "user_id": "a124307f-c251-455d-ace7-583594ebb721",
+      "password_hash": "$2b$12$bI57pfHRrIUpZI.bV6Q3ueMXN8i4FQdUyORRHXQ.Gl3G4oKSobVTW",
+      "token_type": "bearer",
+      "expires_at": "2024-11-12 03:48:13.363908",
+      "created_at": "2022-01-01T00:00:00Z"
+    }
+  ]
+}
+

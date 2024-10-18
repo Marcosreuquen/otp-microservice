@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from uuid import UUID
 from sqlmodel import Session, select
 
-from app.models.tables import AuthService
+from app.models.tables import AuthService, User, App
 from app.lib.otp import generate_secret
 from app.schemas.schemas import MFARegister, RecoveryMFAData
 
@@ -88,3 +88,8 @@ def get_secret(user_id: UUID, app_id: UUID, session: Session):
     if not record:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Record not found")
     return record.otp_secret
+
+def get_service_with_user_and_app(user_id: UUID, app_id: UUID, session: Session):
+    statement = select(AuthService, User, App).where(AuthService.user_id == user_id, AuthService.app_id == app_id).join(User, AuthService.user_id == User.id).join(App, AuthService.app_id == App.id)
+    record = session.exec(statement).first()
+    return record

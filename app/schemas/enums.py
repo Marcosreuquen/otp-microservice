@@ -8,3 +8,4 @@ class OtpMethod(Enum):
     TOTP = 'TOTP'
     SMS = 'SMS'
     EMAIL = 'EMAIL'
+    WHATSAPP = 'WHATSAPP'
