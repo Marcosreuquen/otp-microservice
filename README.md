@@ -22,7 +22,7 @@ Users authentication
 ### /api/app:
 registration, modification and deletion of applications
 
-# Tecnologías utilizadas
+# Tech Stack
 
 - FastAPI (Backend Framework)
 - Pydantic (Schema)
@@ -42,7 +42,7 @@ Install the dependencies: `pip install -r requirements.txt`
 
 Run the server: `fastapi run app/main.py`
 
-# Uso
+# Use
 
 Update the environment variables in `.env` file with the values in the `.env.example` file.
 
