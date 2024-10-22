@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from pyotp import TOTP, random_base32, parse_uri as parse
 
 

@@ -1,10 +1,10 @@
-from fastapi import HTTPException, status
 from uuid import UUID
 from sqlmodel import Session, select
 
 from app.models.tables import AuthService, User, App
 from app.lib.otp import generate_secret
 from app.schemas.schemas import MFARegister, RecoveryMFAData
+from app.utils.exceptionHandler import ExceptionService
 
 
 def register_mfa(data: MFARegister, session: Session):
@@ -26,10 +26,9 @@ def disable_mfa(user_id: UUID,app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id)
     record = session.exec(statement).first()
 
-    if not record:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Record not found")
-    if not record.enabled:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Record already disabled")
+    ExceptionService.handle(record, 404, "Record not found")
+    ExceptionService.handle(record.enabled, 409, "Record already disabled")
+
 
     record.enabled = False
     session.add(record)
@@ -42,10 +41,8 @@ def enable_mfa(user_id: UUID, app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
     record = session.exec(statement).first()
 
-    if not record:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Record not found")
-    if record.enabled:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Record already enabled")
+    ExceptionService.handle(record, 404, "Record not found")
+    ExceptionService.handle(record.enabled, 409, "Record already enabled")
 
     record.enabled = True
     session.add(record)
@@ -67,10 +64,8 @@ def recovery_mfa(user_id: UUID, body: RecoveryMFAData, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == body.app_id)
     record = session.exec(statement).first()
 
-    if not record:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Record not found")
-    if not record.otp_method == body.otp_method:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Invalid OTP method")
+    ExceptionService.handle(record, 404, "Record not found")
+    ExceptionService.handle(record.otp_method == body.otp_method, 409, "Invalid OTP method")
 
     record.recovery_method = body.recovery_method
     record.otp_method = body.otp_method
@@ -84,9 +79,8 @@ def recovery_mfa(user_id: UUID, body: RecoveryMFAData, session: Session):
 def get_secret(user_id: UUID, app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
     record = session.exec(statement).first()
+    ExceptionService.handle(record, 404, "Record not found")
 
-    if not record:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Record not found")
     return record.otp_secret
 
 def get_service_with_user_and_app(user_id: UUID, app_id: UUID, session: Session):

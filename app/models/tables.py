@@ -19,7 +19,7 @@ class App(SQLModel, table=True):
     id: UUID = Field(default_factory=lambda: uuid.uuid4(), primary_key=True)
     name: str = Field(index=True, max_length=100)
     api_key_secret: str = Field(index=True, max_length=256)
-    #owner_id: UUID = Field(foreign_key="user.id", unique=True, index=True)
+    owner_id: UUID = Field(foreign_key="user.id", unique=True)
     auth_services: List["AuthService"] = Relationship(back_populates="app")
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 

@@ -26,20 +26,23 @@
   "apps": [
     {
       "id": "03bcf61b-b36e-4a3a-b6e1-8ebace3ae4a4",
+      "owner_id": "a124307f-c251-455d-ace7-583594ebb721",
       "name": "ProjectManagementApp",
-      "api_key_secret": "pmapp_7h3s3cr3t",
+      "api_key_secret": "MFA-projectmanagamentapp-PAHT756ASC5TK3HJ5IWOOF73KTBO5PK2",
       "created_at": "2022-01-01T00:00:00Z"
     },
     {
       "id": "f4af77c2-3921-4b66-85dd-f66c905b9abe",
+      "owner_id": "4b23859b-3b54-40e6-bafe-57d706b9aa55",
       "name": "FinanceApp",
-      "api_key_secret": "finapp_s3cr3tk3y",
+      "api_key_secret": "MFA-financeapp-EBUTP6H6K3PH6ZVPIXJFYOCS2HPZIMPP",
       "created_at": "2022-01-01T00:00:00Z"
     },
     {
       "id": "dddf50b7-09c6-4e9f-96c7-40b2f5e2b6cc",
+      "owner_id": "12293a75-57e8-4f07-b0ab-b0e6f9bb85cb",
       "name": "HealthTracker",
-      "api_key_secret": "healthtrk_a8d93kld",
+      "api_key_secret": "MFA-healthtracker-BJLUDSED72DJKTXQFEDIVTMFQGUPVKUF",
       "created_at": "2022-01-01T00:00:00Z"
     }
   ],

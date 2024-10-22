@@ -31,7 +31,6 @@ class UserCredentials(BaseModel):
 
 class MFARegister(BaseModel):
     app_id: UUID
-    user_id: UUID
     username: str
     otp_method: OtpMethod
     recovery_method: RecoveryMethod
