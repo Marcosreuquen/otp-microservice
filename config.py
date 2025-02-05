@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     TWILIO_PHONE_NUMBER: str
     TWILIO_WHATSAPP_NUMBER: str
     TWILIO_WHATSAPP_CONTENT_SID: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    POSTGRES_HOST: str
 
     class Config:
         env_file = ".env"
