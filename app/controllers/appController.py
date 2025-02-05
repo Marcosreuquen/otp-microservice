@@ -13,7 +13,7 @@ def create_app(user_id: UUID, name: str, session: Session):
     record = App(
         name=name,
         owner_id=user_id,
-        api_key_secret=f"MFA-{name.lower().replace(' ', '_')}-{generate_secret()}"
+        api_key_secret=f"OTP-{name.lower().replace(' ', '_')}-{generate_secret()}"
     )
     session.add(record)
     session.commit()
@@ -63,7 +63,7 @@ def reset_api_key_secret(app_id: UUID, user_id: UUID, session: Session):
     ExceptionService.handle(record, 404, "Record not found")
     ExceptionService.handle(record.owner_id == user_id, 401, "Unauthorized")
 
-    record.api_key_secret = f"MFA-{name.lower().replace(' ', '_')}-{generate_secret()}"
+    record.api_key_secret = f"OTP-{name.lower().replace(' ', '_')}-{generate_secret()}"
     session.add(record)
     session.commit()
     session.refresh(record)

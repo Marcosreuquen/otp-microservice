@@ -13,18 +13,18 @@ from fastapi.responses import StreamingResponse
 
 from app.utils.exceptionHandler import ExceptionService
 
-router = APIRouter(prefix="/mfa", tags=["mfa"])
+router = APIRouter(prefix="/otp", tags=["otp"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 @RequiresAuthentication
-def create_user(body: schemas.MFARegister, user_id: UUID, session: Session = Depends(get_session)):
+def create_user(body: schemas.OTPRegister, user_id: UUID, session: Session = Depends(get_session)):
     user = userController.get_user(body.username, session)
     ExceptionService.handle(user, 404, "User not found")
     body.user_id = user.id
 
     app = appController.get_app_by_id(body.app_id, session)
     ExceptionService.handle(app, 404, "App not found")
-    service_record: AuthService = authServiceController.register_mfa(body, session)
+    service_record: AuthService = authServiceController.register_otp(body, session)
     ExceptionService.handle(service_record, 409, "User already registered")
 
     uri = generate_uri(service_record.otp_secret, app.name, user.username)
@@ -33,17 +33,17 @@ def create_user(body: schemas.MFARegister, user_id: UUID, session: Session = Dep
 
 @router.put("/disable")
 @RequiresAuthentication
-async def disable_mfa(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def disable_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
     ExceptionService.handle(user_id and app_id, 401)
 
-    succeed = authServiceController.disable_mfa(user_id, app_id, session)
+    succeed = authServiceController.disable_otp(user_id, app_id, session)
     return {"success": succeed}
 
 @router.put("/enable")
 @RequiresAuthentication
-async def enable_mfa(body: schemas.BodyWithUri, request: Request, session: Session = Depends(get_session)):
+async def enable_otp(body: schemas.BodyWithUri, request: Request, session: Session = Depends(get_session)):
     parsed_uri = parse_uri(body.uri)
     ExceptionService.handle(parsed_uri, 400, "Invalid URI")
 
@@ -53,22 +53,22 @@ async def enable_mfa(body: schemas.BodyWithUri, request: Request, session: Sessi
     app = appController.get_app_by_name(parsed_uri.issuer, session)
     ExceptionService.handle(app, 404, "App not found")
 
-    succeed = authServiceController.enable_mfa(user.id, app.id, session)
+    succeed = authServiceController.enable_otp(user.id, app.id, session)
 
     return { "success": succeed }
 
 @router.get("/status")
 @RequiresAuthentication
-async def status_mfa(app_id: UUID, request: Request, session: Session = Depends(get_session)):
+async def status_otp(app_id: UUID, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     ExceptionService.handle(app_id and user_id, 401)
-    mfa_enabled = authServiceController.status_mfa(user_id, app_id, session)
-    return {"enabled": mfa_enabled}
+    otp_enabled = authServiceController.status_otp(user_id, app_id, session)
+    return {"enabled": otp_enabled}
 
 @router.put("/recovery")
 @RequiresAuthentication
-async def recovery_mfa(body: schemas.RecoveryMFAData, request: Request, session: Session = Depends(get_session)):
+async def recovery_otp(body: schemas.RecoveryOTPData, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     ExceptionService.handle(user_id and body.app_id, 401)
-    succeed = authServiceController.recovery_mfa(user_id, body, session)
+    succeed = authServiceController.recovery_otp(user_id, body, session)
     return {"success": succeed}

@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from app.utils.middlewares import CreateStateMiddleware
 from config import settings
 from .models.clean_and_seed_data import drop_database, seed_data
-from .routes import codeRouter, mfaRouter, authRouter, appRouter
+from .routes import codeRouter, authRouter, appRouter, otpRouter
 from .models.db import db
 from .utils.logger import Logger
 
@@ -44,6 +44,6 @@ async def root():
     return {}
 
 
-routes = [codeRouter, mfaRouter, authRouter, appRouter]
+routes = [codeRouter, otpRouter, authRouter, appRouter]
 for route in routes:
     app.include_router(route.router, prefix="/api")

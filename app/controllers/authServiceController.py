@@ -3,11 +3,11 @@ from sqlmodel import Session, select
 
 from app.models.tables import AuthService, User, App
 from app.lib.otp import generate_secret
-from app.schemas.schemas import MFARegister, RecoveryMFAData
+from app.schemas.schemas import OTPRegister, RecoveryOTPData
 from app.utils.exceptionHandler import ExceptionService
 
 
-def register_mfa(data: MFARegister, session: Session):
+def register_otp(data: OTPRegister, session: Session):
     record = AuthService(
         user_id=data.user_id,
         app_id=data.app_id,
@@ -22,7 +22,7 @@ def register_mfa(data: MFARegister, session: Session):
 
     return record
 
-def disable_mfa(user_id: UUID,app_id: UUID, session: Session):
+def disable_otp(user_id: UUID,app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id)
     record = session.exec(statement).first()
 
@@ -37,7 +37,7 @@ def disable_mfa(user_id: UUID,app_id: UUID, session: Session):
     succeed = record.enabled == False
     return succeed
 
-def enable_mfa(user_id: UUID, app_id: UUID, session: Session):
+def enable_otp(user_id: UUID, app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
     record = session.exec(statement).first()
 
@@ -52,7 +52,7 @@ def enable_mfa(user_id: UUID, app_id: UUID, session: Session):
     return succeed
 
 
-def status_mfa(user_id: UUID, app_id: UUID, session: Session):
+def status_otp(user_id: UUID, app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
     record = session.exec(statement).first()
 
@@ -60,7 +60,7 @@ def status_mfa(user_id: UUID, app_id: UUID, session: Session):
         return True
     return False
 
-def recovery_mfa(user_id: UUID, body: RecoveryMFAData, session: Session):
+def recovery_otp(user_id: UUID, body: RecoveryOTPData, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == body.app_id)
     record = session.exec(statement).first()
 

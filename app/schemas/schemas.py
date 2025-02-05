@@ -29,7 +29,7 @@ class UserCredentials(BaseModel):
     username: str
     password: str
 
-class MFARegister(BaseModel):
+class OTPRegister(BaseModel):
     app_id: UUID
     username: str
     otp_method: OtpMethod
@@ -38,7 +38,7 @@ class MFARegister(BaseModel):
 class BodyWithAppId(BaseModel):
     app_id: UUID
 
-class RecoveryMFAData(BaseModel):
+class RecoveryOTPData(BaseModel):
     app_id: UUID
     recovery_method: RecoveryMethod
     otp_method: OtpMethod

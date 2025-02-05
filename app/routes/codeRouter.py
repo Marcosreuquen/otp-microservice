@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.controllers.authServiceController import get_service_with_user_and_app
 from app.lib.twilio import send_sms, send_whatsapp
+from app.lib.resend import send_email, get_template
 from app.models.db import get_session
 from app.controllers import authServiceController
 from app.lib.otp import generate_otp, verify_otp
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/code", tags=["code"])
 
 @router.get("/generate/{app_id}")
 @RequiresAuthentication
-async def generate_mfa(app_id: UUID, request: Request, session: Session = Depends(get_session)):
+async def generate_otp(app_id: UUID, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     secret = authServiceController.get_secret(user_id, app_id, session)
     ExceptionService.handle(secret, 404, "User not found")
@@ -26,7 +27,7 @@ async def generate_mfa(app_id: UUID, request: Request, session: Session = Depend
 
 @router.post("/sms")
 @RequiresAuthentication
-async def send_sms_mfa(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def send_sms_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
 
@@ -50,7 +51,7 @@ async def send_sms_mfa(body: schemas.BodyWithAppId, request: Request, session: S
 
 @router.post("/whatsapp")
 @RequiresAuthentication
-async def send_whatsapp_mfa(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def send_whatsapp_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
 
@@ -73,7 +74,7 @@ async def send_whatsapp_mfa(body: schemas.BodyWithAppId, request: Request, sessi
 
 @router.get("/email")
 @RequiresAuthentication
-async def send_email_mfa(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def send_email_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
 
@@ -88,9 +89,11 @@ async def send_email_mfa(body: schemas.BodyWithAppId, request: Request, session:
     app_name = service.App.name
     ExceptionService.handle(app_name, 404, "App not found")
 
-    response = send_sms(
+    response = send_email(
         to=email,
-        body=f"Your verification code for {app_name} is: {otp}"
+        subject=f"Your verification code for {app_name}",
+        body=get_template(app_name, otp)
+        
     )
     ExceptionService.handle(response, 500, "Error sending email")
 
@@ -98,7 +101,7 @@ async def send_email_mfa(body: schemas.BodyWithAppId, request: Request, session:
 
 @router.post("/verify")
 @RequiresAuthentication
-async def verify_mfa( body: schemas.VerifyOTP, request: Request, session: Session = Depends(get_session)):
+async def verify_otp( body: schemas.VerifyOTP, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
     otp = body.otp
