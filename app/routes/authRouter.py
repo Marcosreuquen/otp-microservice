@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 )
 async def create_user(user: schemas.CreateUser, session: Session = Depends(get_session)):
      user_exist = userController.user_exists(user.username, session)
-     ExceptionService.handle(user_exist, 403, "User already exists")
+     ExceptionService.handle(not user_exist, 403, "User already exists")
 
      password_hash = jwt.hash(user.password)
      new_user: User = userController.create_user(user, session)
