@@ -34,40 +34,93 @@ registration, modification and deletion of applications
 - Twilio (SMS/whatsapp sender)
 - SwaggerUI (API Documentation)
 
+# Structure of the project
+
+The project is structured in the following way:
+```
+.
+├── app
+│   ├── lib # all the third-party libraries
+│   ├── routes # endpoints
+│   ├── schemas # custom types and schemas
+│   ├── controllers # the logic of the endpoints
+│   ├── models # the database models
+│   ├── utils # utils functions
+│   ├── main.py # the file that runs the project
+├── config # loads the environment variables into the project
+├── requirements.txt # a list of the dependencies of the project
+└── .env # the environment variables
+
+```
+
 # Installation
 
-Clone this repository: `git clone https://github.com/marcosreuquen/otp-microservice.git`
+Clone this repository: 
 
-Install the dependencies: `pip install -r requirements.txt`
+```bash
+git clone https://github.com/marcosreuquen/otp-microservice.git
+cd otp-microservice
+```
+
+Install the dependencies: 
+```bash 
+pip install -r requirements.txt
+```
 
 Create a virtual environment:
-`python3 -m venv .venv`
+```bash 
+python3 -m venv .venv
+```
 
-Activate the virtual environment: `source .venv/bin/activate`
+Activate the virtual environment: 
+```bash
+source .venv/bin/activate # for linux and mac
+source .venv/Scripts/activate # for windows
+```
+
+Prepare the environment variables:
+
+```bash
+cp .env.example .env
+```
 
 Update the environment variables in the `.env` file with the values in the `.env.example` file.
 
 You will need a database to run the server, or it will fail. If you don't have a database, you can use a local Postgres instance or run a Docker container.
-`docker run -p 5432:5432 -e POSTGRES_PASSWORD=your_password postgres`
+```bash 
+docker run -p 5432:5432 -e POSTGRES_PASSWORD=your_password postgres
+```
 
-Run the server: `uvicorn main:app --host 0.0.0.0 --port 8000` or `fastapi run app/main.py`
+Run the server: 
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+``` 
 
-Then you can use Swagger UI at http://localhost:8000/docs to access the API documentation.
+or 
+
+```bash
+fastapi run app/main.py
+```
+
+Then you can use **Swagger UI** at http://localhost:8000/docs to access the API documentation.
 
 
 ## Usage with Docker
 
-To run the application and the database using Docker, follow these steps:
+To run the application and the database using Docker, run the following command:
 
-1. Build the Docker images:
-`docker-compose build`
+```bash 
+docker-compose up --build
+```
 
-2. Start the containers:
-`docker-compose up`
-
-This will start both the application and the database. The API will be available at http://localhost:8000/docs.
+This will start both the application and the database, and the network to connect them. 
+The API will be available at http://localhost:8000/docs.
 
 
 # Contribution
 
 If you want to contribute to this project, please create a fork and send a pull request.
+
+# Me
+
+- You can find me here: [marcosreuquen](https://marcosdiaz.dev)

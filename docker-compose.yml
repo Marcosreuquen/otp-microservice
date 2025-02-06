@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   db:
     image: postgres:alpine
@@ -8,6 +8,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
+    networks:
+      - otp_network
+    restart: always
 
   app:
     build: .
@@ -17,3 +20,9 @@ services:
       - .env
     depends_on:
       - db
+    networks:
+      - otp_network
+
+networks:
+  otp_network:
+    driver: bridge
