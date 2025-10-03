@@ -6,7 +6,7 @@ from app.schemas import schemas
 from app.models.db import get_session
 from app.lib import jwt, oauth
 from app.models.tables import User
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.errors import require, NotFound, Conflict, InternalError, Unauthorized
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -15,15 +15,15 @@ router = APIRouter(prefix="/auth", tags=["auth"])
     response_model=schemas.UserResponse
 )
 async def create_user(user: schemas.CreateUser, session: Session = Depends(get_session)):
-     user_exist = userController.user_exists(user.username, session)
-     ExceptionService.handle(not user_exist, 403, "User already exists")
+    user_exist = userController.user_exists(user.username, session)
+    require(not user_exist, Conflict("User already exists"))
 
-     password_hash = jwt.hash(user.password)
-     new_user: User = userController.create_user(user, session)
-     ExceptionService.handle(new_user, 500, "Something went wrong")
-     auth_record: bool = authController.create_auth_record(new_user, password_hash, session)
-     ExceptionService.handle(auth_record, 500, "Something went wrong")
-     return new_user
+    password_hash = jwt.hash(user.password)
+    new_user: User = userController.create_user(user, session)
+    require(new_user, InternalError("Failed to create user"))
+    auth_record: bool = authController.create_auth_record(new_user, password_hash, session)
+    require(auth_record, InternalError("Failed to create auth record"))
+    return new_user
 
 
 @router.post("/login", response_model=schemas.Token)
@@ -32,11 +32,11 @@ async def login(
     db: Session = Depends(get_session),
 ):
     user = userController.get_user(user_credentials.username, db)
-    ExceptionService.handle(user, 403)
+    require(user, NotFound("User not found"))
 
     auth_record = authController.get_auth_record(user.id, db)
     verification = jwt.verify(user_credentials.password, auth_record.password_hash)
-    ExceptionService.handle(verification, 403)
+    require(verification, Unauthorized("Invalid credentials"))
 
     access_token = oauth.create_access_token(data={"user_id": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}

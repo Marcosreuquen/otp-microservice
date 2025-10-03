@@ -6,3 +6,7 @@ data
 .env
 notes.md
 notes.md.bak
+.coverage
+.pytest_cache
+logs
+reports

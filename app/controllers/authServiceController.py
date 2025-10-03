@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from app.models.tables import AuthService, User, App
 from app.lib.otp import generate_secret
 from app.schemas.schemas import OTPRegister, RecoveryOTPData
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.errors import require, NotFound, Conflict
 
 
 def register_otp(data: OTPRegister, session: Session):
@@ -26,8 +26,8 @@ def disable_otp(user_id: UUID,app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id)
     record = session.exec(statement).first()
 
-    ExceptionService.handle(record, 404, "Record not found")
-    ExceptionService.handle(record.enabled, 409, "Record already disabled")
+    require(record, NotFound("Record not found"))
+    require(record.enabled, Conflict("Record already disabled"))
 
 
     record.enabled = False
@@ -41,8 +41,9 @@ def enable_otp(user_id: UUID, app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
     record = session.exec(statement).first()
 
-    ExceptionService.handle(record, 404, "Record not found")
-    ExceptionService.handle(record.enabled, 409, "Record already enabled")
+    require(record, NotFound("Record not found"))
+    # Only allow enabling if currently disabled
+    require(not record.enabled, Conflict("Record already enabled"))
 
     record.enabled = True
     session.add(record)
@@ -64,8 +65,8 @@ def recovery_otp(user_id: UUID, body: RecoveryOTPData, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == body.app_id)
     record = session.exec(statement).first()
 
-    ExceptionService.handle(record, 404, "Record not found")
-    ExceptionService.handle(record.otp_method == body.otp_method, 409, "Invalid OTP method")
+    require(record, NotFound("Record not found"))
+    require(record.otp_method == body.otp_method, Conflict("Invalid OTP method"))
 
     record.recovery_method = body.recovery_method
     record.otp_method = body.otp_method
@@ -79,7 +80,7 @@ def recovery_otp(user_id: UUID, body: RecoveryOTPData, session: Session):
 def get_secret(user_id: UUID, app_id: UUID, session: Session):
     statement = select(AuthService).where(AuthService.user_id == user_id, AuthService.app_id == app_id)
     record = session.exec(statement).first()
-    ExceptionService.handle(record, 404, "Record not found")
+    require(record, NotFound("Record not found"))
 
     return record.otp_secret
 

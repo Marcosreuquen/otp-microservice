@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     POSTGRES_HOST: str
+    REDIS_URL: str = "redis://redis:6379/0"
 
     class Config:
         env_file = ".env"

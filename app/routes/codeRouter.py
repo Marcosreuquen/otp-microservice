@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlmodel import Session
 from uuid import UUID
 
@@ -7,21 +7,43 @@ from app.lib.twilio import send_sms, send_whatsapp
 from app.lib.resend import send_email, get_template
 from app.models.db import get_session
 from app.controllers import authServiceController
-from app.lib.otp import generate_otp, verify_otp
+from app.lib.otp import generate_otp as generate_otp_code, verify_otp
 from app.schemas import schemas
 from app.utils.decorators import RequiresAuthentication
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.errors import require, NotFound, Unauthorized, InternalError
+from app.lib.cache import get_redis
 
 router = APIRouter(prefix="/code", tags=["code"])
 
 @router.get("/generate/{app_id}")
 @RequiresAuthentication
-async def generate_otp(app_id: UUID, request: Request, session: Session = Depends(get_session)):
+async def generate_code(app_id: UUID, request: Request, session: Session = Depends(get_session), redis = Depends(get_redis)):
     user_id = request.state.user_id
     secret = authServiceController.get_secret(user_id, app_id, session)
-    ExceptionService.handle(secret, 404, "User not found")
+    require(secret, NotFound("User not found"))
 
-    otp = generate_otp(secret)
+    # Rate limit: max 5 requests per minute per user+app
+    rate_key = f"rate:{user_id}:{app_id}"
+    try:
+        current = await redis.incr(rate_key)
+        if current == 1:
+            await redis.expire(rate_key, 60)
+    except Exception:
+        # If redis fails, don't completely block - fall back to permissive mode
+        current = 1
+
+    if current > 5:
+        raise HTTPException(status_code=429, detail="Too many requests")
+
+    otp = generate_otp_code(secret)
+
+    # store OTP in redis for short-lived verification (120 seconds)
+    otp_key = f"otp:{user_id}:{app_id}"
+    try:
+        await redis.setex(otp_key, 120, otp)
+    except Exception:
+        # ignore cache set errors - OTP still returned but not stored
+        pass
 
     return {"code": otp}
 
@@ -33,19 +55,19 @@ async def send_sms_otp(body: schemas.BodyWithAppId, request: Request, session: S
 
     service = get_service_with_user_and_app(user_id, app_id, session)
     secret = service.AuthService.secret
-    ExceptionService.handle(secret, 404, "User not found")
-    otp = generate_otp(secret)
-    ExceptionService.handle(otp, 500, "Error generating OTP")
+    require(secret, NotFound("User not found"))
+    otp = generate_otp_code(secret)
+    require(otp, InternalError("Error generating OTP"))
     phone_number = service.User.phone_number
-    ExceptionService.handle(phone_number, 404, "Phone number not found")
+    require(phone_number, NotFound("Phone number not found"))
     app_name = service.App.name
-    ExceptionService.handle(app_name, 404, "App not found")
+    require(app_name, NotFound("App not found"))
 
     message = send_sms(
         to=phone_number,
         body=f"Your verification code for {app_name} is: {otp}"
     )
-    ExceptionService.handle(message, 500, "Error sending SMS")
+    require(message, InternalError("Error sending SMS"))
 
     return {"success": True}
 
@@ -55,39 +77,39 @@ async def send_whatsapp_otp(body: schemas.BodyWithAppId, request: Request, sessi
     user_id = request.state.user_id
     app_id = body.app_id
 
-    ExceptionService.handle(user_id and app_id, 401)
+    require(user_id and app_id, Unauthorized("Unauthorized"))
     service = get_service_with_user_and_app(user_id, app_id, session)
     secret = service.AuthService.secret
-    ExceptionService.handle(secret, 404, "User not found")
-    otp = generate_otp(secret)
-    ExceptionService.handle(otp, 500, "Error generating OTP")
+    require(secret, NotFound("User not found"))
+    otp = generate_otp_code(secret)
+    require(otp, InternalError("Error generating OTP"))
     phone_number = service.User.phone_number
-    ExceptionService.handle(phone_number, 404, "Phone number not found")
+    require(phone_number, NotFound("Phone number not found"))
     message = send_whatsapp(
         to=phone_number,
         code=otp
     )
-    ExceptionService.handle(message, 500, "Error sending WhatsApp message")
+    require(message, InternalError("Error sending WhatsApp message"))
 
     return {"success": True}
 
 
-@router.get("/email")
+@router.post("/email")
 @RequiresAuthentication
 async def send_email_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
 
-    ExceptionService.handle(user_id and app_id, 401)
+    require(user_id and app_id, Unauthorized("Unauthorized"))
     service = get_service_with_user_and_app(user_id, app_id, session)
     secret = service.AuthService.secret
-    ExceptionService.handle(secret, 404, "User not found")
-    otp = generate_otp(secret)
-    ExceptionService.handle(otp, 500, "Error generating OTP")
+    require(secret, NotFound("User not found"))
+    otp = generate_otp_code(secret)
+    require(otp, InternalError("Error generating OTP"))
     email = service.User.email
-    ExceptionService.handle(email, 404, "Email not found")
+    require(email, NotFound("Email not found"))
     app_name = service.App.name
-    ExceptionService.handle(app_name, 404, "App not found")
+    require(app_name, NotFound("App not found"))
 
     response = send_email(
         to=email,
@@ -95,22 +117,22 @@ async def send_email_otp(body: schemas.BodyWithAppId, request: Request, session:
         body=get_template(app_name, otp)
         
     )
-    ExceptionService.handle(response, 500, "Error sending email")
+    require(response, InternalError("Error sending email"))
 
     return {"success": True}
 
 @router.post("/verify")
 @RequiresAuthentication
-async def verify_otp( body: schemas.VerifyOTP, request: Request, session: Session = Depends(get_session)):
+async def verify_code( body: schemas.VerifyOTP, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
     otp = body.otp
 
-    ExceptionService.handle(user_id and app_id and otp, 401)
+    require(user_id and app_id and otp, Unauthorized("Unauthorized"))
     secret = authServiceController.get_secret(user_id, app_id, session)
-    ExceptionService.handle(secret, 404, "User not found")
+    require(secret, NotFound("User not found"))
     result = verify_otp(secret, otp)
-    ExceptionService.handle(result, 401, "Invalid OTP")
+    require(result, Unauthorized("Invalid OTP"))
 
 
     return {"success": True}

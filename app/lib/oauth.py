@@ -3,7 +3,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta, UTC
 
 from app.schemas import schemas
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.errors import require, Unauthorized, BadRequest
 from config import settings
 
 def create_access_token(data: dict):
@@ -25,22 +25,26 @@ def verify_access_token(token: str):
         )
 
         id: UUID = payload.get("id")
-        ExceptionService.handle(id, 401, "Invalid token")
+        require(id is not None, Unauthorized("Invalid token"))
         expiration_date = payload.get("expiration_date")
 
-        ExceptionService.handle(
-            expiration_date and datetime.now() > datetime.fromisoformat(expiration_date),
-            401,
-            "Invalid token")
+        # expiration_date should exist and be in the future
+        require(
+            expiration_date is not None and datetime.now() <= datetime.fromisoformat(expiration_date),
+            Unauthorized("Token expired or invalid"))
 
         token_data = schemas.TokenData(id=id, expiration_date=expiration_date)
+        return token_data
     except JWTError:
-        ExceptionService.handle(False, 401, "Invalid token")
-    return token_data
+        raise Unauthorized("Invalid token")
 
 
-def get_token(token:str):
-    [token_type, token] = str.split(token, sep=" ")
-    ExceptionService.handle(token_type.lower() != "bearer", 401, "Could not validate credentials")
-    ExceptionService.handle(token, 401, "Invalid token")
-    return token
+def get_token(token: str):
+    try:
+        token_type, tok = str.split(token, sep=" ")
+    except Exception:
+        raise BadRequest("Invalid Authorization header format")
+
+    require(token_type.lower() == "bearer", Unauthorized("Could not validate credentials"))
+    require(tok, Unauthorized("Invalid token"))
+    return tok

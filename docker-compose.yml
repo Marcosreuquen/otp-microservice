@@ -20,8 +20,16 @@ services:
       - .env
     depends_on:
       - db
+      - redis
     networks:
       - otp_network
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - otp_network
+    restart: unless-stopped
 
 networks:
   otp_network:

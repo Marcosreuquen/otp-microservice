@@ -18,8 +18,13 @@ def send_email(
         "text": body
     }
     
-    email = resend.Emails.send(params)
-    return  email
+    try:
+        email = resend.Emails.send(params)
+        return email
+    except Exception as e:
+        from app.utils.logger import Logger
+        Logger.error(f"Resend send_email failed: {e}")
+        return None
 
 def get_template(app_name: str, code: str) -> str:
     html_template = """\
@@ -68,4 +73,10 @@ def get_template(app_name: str, code: str) -> str:
     </body>
     </html>
     """
-    return html_template.format(app_name=app_name, code=code)
+    return to_single_line(html_template.format(app_name=app_name, code=code))
+
+def to_single_line(html: str) -> str:
+    lines = html.splitlines()
+    for i in range(len(lines)):
+        lines[i] = lines[i].strip()
+    return ' '.join(lines).strip()

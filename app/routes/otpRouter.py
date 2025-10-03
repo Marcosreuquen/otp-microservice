@@ -11,7 +11,7 @@ from app.lib.qr import generate_qr
 from app.lib.otp import generate_uri, parse_uri
 from fastapi.responses import StreamingResponse
 
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.errors import require, NotFound, Conflict, Unauthorized, BadRequest
 
 router = APIRouter(prefix="/otp", tags=["otp"])
 
@@ -19,13 +19,13 @@ router = APIRouter(prefix="/otp", tags=["otp"])
 @RequiresAuthentication
 def create_user(body: schemas.OTPRegister, user_id: UUID, session: Session = Depends(get_session)):
     user = userController.get_user(body.username, session)
-    ExceptionService.handle(user, 404, "User not found")
+    require(user, NotFound("User not found"))
     body.user_id = user.id
 
     app = appController.get_app_by_id(body.app_id, session)
-    ExceptionService.handle(app, 404, "App not found")
+    require(app, NotFound("App not found"))
     service_record: AuthService = authServiceController.register_otp(body, session)
-    ExceptionService.handle(service_record, 409, "User already registered")
+    require(service_record, Conflict("User already registered"))
 
     uri = generate_uri(service_record.otp_secret, app.name, user.username)
     qr = generate_qr(uri)
@@ -36,7 +36,7 @@ def create_user(body: schemas.OTPRegister, user_id: UUID, session: Session = Dep
 async def disable_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
     app_id = body.app_id
-    ExceptionService.handle(user_id and app_id, 401)
+    require(user_id and app_id, Unauthorized("Unauthorized"))
 
     succeed = authServiceController.disable_otp(user_id, app_id, session)
     return {"success": succeed}
@@ -45,13 +45,13 @@ async def disable_otp(body: schemas.BodyWithAppId, request: Request, session: Se
 @RequiresAuthentication
 async def enable_otp(body: schemas.BodyWithUri, request: Request, session: Session = Depends(get_session)):
     parsed_uri = parse_uri(body.uri)
-    ExceptionService.handle(parsed_uri, 400, "Invalid URI")
+    require(parsed_uri, BadRequest("Invalid URI"))
 
     user = userController.get_user(parsed_uri.name, session)
-    ExceptionService.handle(user and user.id == request.state.user_id, 404, "User not found")
+    require(user and user.id == request.state.user_id, NotFound("User not found"))
 
     app = appController.get_app_by_name(parsed_uri.issuer, session)
-    ExceptionService.handle(app, 404, "App not found")
+    require(app, NotFound("App not found"))
 
     succeed = authServiceController.enable_otp(user.id, app.id, session)
 
@@ -61,7 +61,7 @@ async def enable_otp(body: schemas.BodyWithUri, request: Request, session: Sessi
 @RequiresAuthentication
 async def status_otp(app_id: UUID, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
-    ExceptionService.handle(app_id and user_id, 401)
+    require(app_id and user_id, Unauthorized("Unauthorized"))
     otp_enabled = authServiceController.status_otp(user_id, app_id, session)
     return {"enabled": otp_enabled}
 
@@ -69,6 +69,6 @@ async def status_otp(app_id: UUID, request: Request, session: Session = Depends(
 @RequiresAuthentication
 async def recovery_otp(body: schemas.RecoveryOTPData, request: Request, session: Session = Depends(get_session)):
     user_id = request.state.user_id
-    ExceptionService.handle(user_id and body.app_id, 401)
+    require(user_id and body.app_id, Unauthorized("Unauthorized"))
     succeed = authServiceController.recovery_otp(user_id, body, session)
     return {"success": succeed}

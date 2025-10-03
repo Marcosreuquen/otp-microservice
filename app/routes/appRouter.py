@@ -6,7 +6,7 @@ from app.models.db import get_session
 from app.utils.decorators import RequiresAuthentication
 import app.schemas.schemas as schemas
 from app.controllers import appController
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.exceptionHandler import ApiException
 
 router = APIRouter(prefix="/app", tags=["app"])
 
@@ -62,4 +62,3 @@ def get_users( app_id: UUID, request: Request, session: Session = Depends(get_se
 
     app = appController.get_user_apps(user_id, app_id, session)
     return app
-

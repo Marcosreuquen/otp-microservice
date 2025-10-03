@@ -8,6 +8,8 @@ from .models.clean_and_seed_data import drop_database, seed_data
 from .routes import codeRouter, authRouter, appRouter, otpRouter
 from .models.db import db
 from .utils.logger import Logger
+from app.utils.exceptionHandler import fastapi_exception_handler, ApiException
+from app.lib.cache import redis_client, close_redis
 
 ENV = settings.ENV
 is_dev = ENV == "dev"
@@ -23,11 +25,26 @@ async def lifespan(app: FastAPI):
 
         if is_dev:
             seed_data()
+        # try pinging redis at startup (optional)
+        try:
+            await redis_client.ping()
+            Logger.info("Redis is available")
+        except Exception as e:
+            Logger.warning(f"Redis not available at startup: {e}")
     except Exception as e:
         Logger.error(e)
     yield
+    # Shutdown/cleanup
+    try:
+        await close_redis()
+    except Exception:
+        pass
 
 app = FastAPI(lifespan=lifespan)
+
+# Register exception handlers
+app.add_exception_handler(Exception, fastapi_exception_handler)
+app.add_exception_handler(ApiException, fastapi_exception_handler)
 
 app.add_middleware(
     CORSMiddleware,

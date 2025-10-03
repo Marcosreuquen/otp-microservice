@@ -2,7 +2,7 @@ from fastapi import Request
 from functools import wraps
 
 from app.lib.oauth import get_token, verify_access_token
-from app.utils.exceptionHandler import ExceptionService
+from app.utils.errors import require, Unauthorized
 
 
 def RequiresAuthentication(func):
@@ -10,15 +10,10 @@ def RequiresAuthentication(func):
     async def wrapper(*args, **kwargs):
         request: Request = kwargs.get("request")
         auth_header = request.headers.get("Authorization")
-
-        ExceptionService.handle(auth_header, 401)
+        require(auth_header, Unauthorized("Authorization header missing"))
         token = get_token(auth_header)
-        ExceptionService.handle(token, 401)
-        try:
-            data = verify_access_token(token)
-            request.state.user_id = data.id
-        finally:
-            pass
+        require(token, Unauthorized("Invalid or missing token"))
+        data = verify_access_token(token)
+        request.state.user_id = data.id
         return await func(*args, **kwargs)
     return wrapper
-

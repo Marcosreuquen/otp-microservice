@@ -10,117 +10,137 @@ This project is a microservice authentication using FastAPI, designed to provide
 - Code generation and verification
 - Status of OTP
 
-# Endpoints
+# One time password microservice (FastAPI)
 
-These are the available groups of endpoints, you will need to run the project and go to `/docs` to get the detailed endpoints under the groups:
-### /api/code: 
-Generation and verification of TOTP codes
-### /api/otp:
-Registration and verification of OTP
-### /api/auth:
-Users authentication
-### /api/app:
-registration, modification and deletion of applications
+Lightweight TOTP/OTP microservice built with FastAPI. This project provides application-level OTP registration, generation and verification using email, SMS and WhatsApp delivery backends.
 
-# Tech Stack
+![Coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)
 
-- FastAPI (Backend Framework)
-- Pydantic (Schema)
-- SQLModel (Postgres ORM)
-- Passlib (Password hashing)
-- pyotp (OTP generator)
-- segno (QR code generator)
-- Resend (Email sender)
-- Twilio (SMS/whatsapp sender)
-- SwaggerUI (API Documentation)
+<!-- To enable a live coverage badge replace the URL below with your Codecov badge once configured -->
+[![codecov](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice/branch/main/graph/badge.svg)](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice)
 
-# Structure of the project
+Features
+--------
+- MFA support: WhatsApp, SMS and email
+- Application registration, modification and deletion
+- User registration, login and logout
+- Code generation and verification
 
-The project is structured in the following way:
+Quick endpoints summary
+- `/api/code` — generation and verification of TOTP codes
+- `/api/otp` — registration and verification of OTP flows
+- `/api/auth` — user authentication (login/logout)
+- `/api/app` — manage registered applications
+
+Tech stack
+----------
+- FastAPI
+- SQLModel (Postgres)
+- pyotp (OTP generation)
+- Resend (email), Twilio (SMS/WhatsApp)
+
+Project layout
+--------------
+Standard layout used in this repo:
+
 ```
-.
+. 
 ├── app
-│   ├── lib # all the third-party libraries
-│   ├── routes # endpoints
-│   ├── schemas # custom types and schemas
-│   ├── controllers # the logic of the endpoints
-│   ├── models # the database models
-│   ├── utils # utils functions
-│   ├── main.py # the file that runs the project
-├── config # loads the environment variables into the project
-├── requirements.txt # a list of the dependencies of the project
-└── .env # the environment variables
-
+│   ├── lib        # third-party library wrappers and clients
+│   ├── routes     # FastAPI routers
+│   ├── schemas    # Pydantic/SQLModel schemas
+│   ├── controllers# business logic called by routes
+│   ├── models     # database models (SQLModel)
+│   ├── utils      # helpers, logging, errors, middlewares
+│   └── main.py    # FastAPI app entrypoint
+├── requirements.txt
+├── docker-compose.yml
+└── pytest.ini
 ```
 
-# Installation
+Error handling
+--------------
+This project uses domain exceptions and a helper `require(condition, exc)` in `app/utils/errors.py`. A global FastAPI handler converts exceptions into structured JSON responses.
 
-Clone this repository: 
+Installation
+------------
+Clone and install:
 
 ```bash
 git clone https://github.com/marcosreuquen/otp-microservice.git
 cd otp-microservice
-```
-
-Install the dependencies: 
-```bash 
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a virtual environment:
-```bash 
-python3 -m venv .venv
-```
-
-Activate the virtual environment: 
-```bash
-source .venv/bin/activate # for linux and mac
-source .venv/Scripts/activate # for windows
-```
-
-Prepare the environment variables:
+Environment
+-----------
+Copy the example `.env` and update credentials:
 
 ```bash
 cp .env.example .env
 ```
 
-Update the environment variables in the `.env` file with the values in the `.env.example` file.
+Database
+--------
+The app uses Postgres in production. For local development you can run Postgres with Docker:
 
-You will need a database to run the server, or it will fail. If you don't have a database, you can use a local Postgres instance or run a Docker container.
-```bash 
+```bash
 docker run -p 5432:5432 -e POSTGRES_PASSWORD=your_password postgres
 ```
 
-Run the server: 
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-``` 
-
-or 
+Run the app
+----------
 
 ```bash
-fastapi run app/main.py
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Then you can use **Swagger UI** at http://localhost:8000/docs to access the API documentation.
+API docs are available at http://localhost:8000/docs (Swagger UI).
 
+Tests and coverage
+------------------
+Tests are written with `pytest`. The repository includes a `pytest.ini` that generates test artifacts into `reports/` (this folder is gitignored). To run tests locally:
 
-## Usage with Docker
-
-To run the application and the database using Docker, run the following command:
-
-```bash 
-docker-compose up --build
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest -q
 ```
 
-This will start both the application and the database, and the network to connect them. 
-The API will be available at http://localhost:8000/docs.
+After running tests `reports/` will contain:
 
+- `reports/junit.xml` — JUnit-style test results
+- `reports/coverage.xml` — coverage XML
+- `reports/coverage_html/` — human-friendly HTML coverage report (open `index.html`)
 
-# Contribution
+Coverage badge
+--------------
+To display a coverage badge in this README configure your CI to upload `reports/coverage.xml` to a badge provider such as Codecov or Coveralls. Example Codecov badge markdown:
 
-If you want to contribute to this project, please create a fork and send a pull request.
+```markdown
+[![codecov](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice/branch/main/graph/badge.svg)](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice)
+```
 
-# Me
+To activate the badge automatically using the CI workflow add a `CODECOV_TOKEN` secret to your repository (only necessary for private repos). The GitHub Actions workflow will upload `reports/coverage.xml` to Codecov when the secret is present.
 
-- You can find me here: [marcosreuquen](https://marcosdiaz.dev)
+Redis (cache)
+-------------
+Redis is used for rate limiting and short-lived OTP storage. The redis client is wired in `app/lib/cache.py` and injected into routes with `Depends(get_redis)`.
+
+Run Redis locally with Docker (or via the project's docker-compose):
+
+```bash
+docker run -p 6379:6379 redis:7
+```
+
+The code is resilient to Redis failures: where Redis is unavailable the application falls back to permissive defaults so functionality continues.
+
+Contribution
+------------
+PRs welcome — fork the repo, create a feature branch and open a PR. Tests and a short description are appreciated.
+
+Contact
+-------
+Find me at: https://marcosdiaz.dev
