@@ -4,6 +4,7 @@ venv
 venv
 data
 .env
+notes/
 notes.md
 notes.md.bak
 .coverage

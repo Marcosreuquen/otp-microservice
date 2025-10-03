@@ -57,10 +57,6 @@ app.add_middleware(
 
 app.add_middleware(CreateStateMiddleware)
 
-@app.get("/", status_code=200)
-async def root():
-    return {}
-
 
 routes = [codeRouter, otpRouter, authRouter, appRouter]
 for route in routes:

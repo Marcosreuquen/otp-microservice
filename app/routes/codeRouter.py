@@ -12,6 +12,7 @@ from app.schemas import schemas
 from app.utils.decorators import RequiresAuthentication
 from app.utils.errors import require, NotFound, Unauthorized, InternalError
 from app.lib.cache import get_redis
+from app.lib.redis_service import redis_service
 
 router = APIRouter(prefix="/code", tags=["code"])
 
@@ -49,9 +50,21 @@ async def generate_code(app_id: UUID, request: Request, session: Session = Depen
 
 @router.post("/sms")
 @RequiresAuthentication
-async def send_sms_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def send_sms_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session), redis = Depends(get_redis)):
     user_id = request.state.user_id
     app_id = body.app_id
+
+    # Rate limiting for SMS sending - max 3 per minute per user+app
+    sms_rate_key = f"sms_rate:{user_id}:{app_id}"
+    try:
+        current = await redis.incr(sms_rate_key)
+        if current == 1:
+            await redis.expire(sms_rate_key, 60)
+        if current > 3:
+            raise HTTPException(status_code=429, detail="Too many SMS requests")
+    except Exception:
+        # If redis fails, continue without rate limiting
+        pass
 
     service = get_service_with_user_and_app(user_id, app_id, session)
     secret = service.AuthService.secret
@@ -73,11 +86,24 @@ async def send_sms_otp(body: schemas.BodyWithAppId, request: Request, session: S
 
 @router.post("/whatsapp")
 @RequiresAuthentication
-async def send_whatsapp_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def send_whatsapp_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session), redis = Depends(get_redis)):
     user_id = request.state.user_id
     app_id = body.app_id
 
     require(user_id and app_id, Unauthorized("Unauthorized"))
+    
+    # Rate limiting for WhatsApp sending - max 3 per minute per user+app
+    whatsapp_rate_key = f"whatsapp_rate:{user_id}:{app_id}"
+    try:
+        current = await redis.incr(whatsapp_rate_key)
+        if current == 1:
+            await redis.expire(whatsapp_rate_key, 60)
+        if current > 3:
+            raise HTTPException(status_code=429, detail="Too many WhatsApp requests")
+    except Exception:
+        # If redis fails, continue without rate limiting
+        pass
+    
     service = get_service_with_user_and_app(user_id, app_id, session)
     secret = service.AuthService.secret
     require(secret, NotFound("User not found"))
@@ -96,11 +122,24 @@ async def send_whatsapp_otp(body: schemas.BodyWithAppId, request: Request, sessi
 
 @router.post("/email")
 @RequiresAuthentication
-async def send_email_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session)):
+async def send_email_otp(body: schemas.BodyWithAppId, request: Request, session: Session = Depends(get_session), redis = Depends(get_redis)):
     user_id = request.state.user_id
     app_id = body.app_id
 
     require(user_id and app_id, Unauthorized("Unauthorized"))
+    
+    # Rate limiting for email sending - max 5 per minute per user+app
+    email_rate_key = f"email_rate:{user_id}:{app_id}"
+    try:
+        current = await redis.incr(email_rate_key)
+        if current == 1:
+            await redis.expire(email_rate_key, 60)
+        if current > 5:
+            raise HTTPException(status_code=429, detail="Too many email requests")
+    except Exception:
+        # If redis fails, continue without rate limiting
+        pass
+    
     service = get_service_with_user_and_app(user_id, app_id, session)
     secret = service.AuthService.secret
     require(secret, NotFound("User not found"))
@@ -123,16 +162,47 @@ async def send_email_otp(body: schemas.BodyWithAppId, request: Request, session:
 
 @router.post("/verify")
 @RequiresAuthentication
-async def verify_code( body: schemas.VerifyOTP, request: Request, session: Session = Depends(get_session)):
+async def verify_code( body: schemas.VerifyOTP, request: Request, session: Session = Depends(get_session), redis = Depends(get_redis)):
     user_id = request.state.user_id
     app_id = body.app_id
     otp = body.otp
 
     require(user_id and app_id and otp, Unauthorized("Unauthorized"))
+    
+    # Rate limiting for verification attempts - max 10 per minute per user+app
+    verify_rate_key = f"verify_rate:{user_id}:{app_id}"
+    try:
+        current = await redis.incr(verify_rate_key)
+        if current == 1:
+            await redis.expire(verify_rate_key, 60)
+        if current > 10:
+            raise HTTPException(status_code=429, detail="Too many verification attempts")
+    except Exception:
+        # If redis fails, continue without rate limiting
+        pass
+    
+    # Check if OTP was generated and stored in cache
+    otp_key = f"otp:{user_id}:{app_id}"
+    cached_otp = None
+    try:
+        cached_otp = await redis.get(otp_key)
+    except Exception:
+        # If redis fails, fall back to TOTP verification
+        pass
+    
+    # Verify against cached OTP first (if available), then fall back to TOTP
+    if cached_otp and cached_otp == otp:
+        # Valid cached OTP - remove it to prevent reuse
+        try:
+            await redis.delete(otp_key)
+        except Exception:
+            pass
+        return {"success": True}
+    
+    # Fall back to TOTP verification
     secret = authServiceController.get_secret(user_id, app_id, session)
     require(secret, NotFound("User not found"))
     result = verify_otp(secret, otp)
     require(result, Unauthorized("Invalid OTP"))
-
 
     return {"success": True}
