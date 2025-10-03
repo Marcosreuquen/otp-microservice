@@ -10,3 +10,4 @@ notes.md.bak
 .pytest_cache
 logs
 reports
+.vscode
