@@ -55,3 +55,17 @@ class VerifyOTP(BaseModel):
 
 class BodyWithUri(BaseModel):
     uri: str
+
+class ServiceStatus(BaseModel):
+    ok: bool
+    latency_ms: float
+
+
+class Services(BaseModel):
+    redis: ServiceStatus
+    db: ServiceStatus
+
+
+class HealthResponse(BaseModel):
+    ok: bool
+    services: Services

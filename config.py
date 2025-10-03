@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     POSTGRES_HOST: str
-    REDIS_URL: str = "redis://redis:6379/0"
+    REDIS_URL: str
+    # Optional explicit fallback redis URL (e.g. redis://127.0.0.1:6379)
+    REDIS_FALLBACK: str = ""
 
     class Config:
         env_file = ".env"

@@ -6,6 +6,7 @@ from app.utils.middlewares import CreateStateMiddleware
 from config import settings
 from .models.clean_and_seed_data import drop_database, seed_data
 from .routes import codeRouter, authRouter, appRouter, otpRouter
+from .routes import healthRouter
 from .models.db import db
 from .utils.logger import Logger
 from app.utils.exceptionHandler import fastapi_exception_handler, ApiException
@@ -64,3 +65,6 @@ async def root():
 routes = [codeRouter, otpRouter, authRouter, appRouter]
 for route in routes:
     app.include_router(route.router, prefix="/api")
+
+# health router (it already defines its own prefix)
+app.include_router(healthRouter.router)
