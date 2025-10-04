@@ -14,11 +14,6 @@ This project is a microservice authentication using FastAPI, designed to provide
 
 Lightweight TOTP/OTP microservice built with FastAPI. This project provides application-level OTP registration, generation and verification using email, SMS and WhatsApp delivery backends.
 
-![Coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)
-
-<!-- To enable a live coverage badge replace the URL below with your Codecov badge once configured -->
-[![codecov](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice/branch/main/graph/badge.svg)](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice)
-
 Features
 --------
 - MFA support: WhatsApp, SMS and email
@@ -114,16 +109,6 @@ After running tests `reports/` will contain:
 - `reports/junit.xml` — JUnit-style test results
 - `reports/coverage.xml` — coverage XML
 - `reports/coverage_html/` — human-friendly HTML coverage report (open `index.html`)
-
-Coverage badge
---------------
-To display a coverage badge in this README configure your CI to upload `reports/coverage.xml` to a badge provider such as Codecov or Coveralls. Example Codecov badge markdown:
-
-```markdown
-[![codecov](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice/branch/main/graph/badge.svg)](https://codecov.io/gh/<YOUR_GITHUB_USER_OR_ORG>/otp-microservice)
-```
-
-To activate the badge automatically using the CI workflow add a `CODECOV_TOKEN` secret to your repository (only necessary for private repos). The GitHub Actions workflow will upload `reports/coverage.xml` to Codecov when the secret is present.
 
 Redis (cache)
 -------------
