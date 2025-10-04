@@ -25,6 +25,23 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Run tests
+        env:
+          DATABASE_URL: "sqlite:///./test.db"
+          SECRET_KEY: "test-secret-key-for-ci"
+          ALGORITHM: "HS256"
+          RESEND_API_KEY: "test-resend-key"
+          EMAIL_ADDRESS: "test@example.com"
+          TWILIO_ACCOUNT_SID: "test-twilio-sid"
+          TWILIO_AUTH_TOKEN: "test-twilio-token"
+          TWILIO_PHONE_NUMBER: "+1234567890"
+          TWILIO_WHATSAPP_NUMBER: "whatsapp:+1234567890"
+          TWILIO_WHATSAPP_CONTENT_SID: "test-content-sid"
+          POSTGRES_USER: "test"
+          POSTGRES_PASSWORD: "test"
+          POSTGRES_DB: "test"
+          POSTGRES_HOST: "localhost"
+          REDIS_URL: "redis://localhost:6379"
+          ENV: "test"
         run: |
           pytest -q
       - name: Upload reports
