@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, timezone, timedelta
 import uuid
 from uuid import UUID
 
@@ -13,7 +13,7 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True, max_length=100)
     phone_number: Optional[str] = Field(max_length=20, default=None)
     auth_services: List["AuthService"] = Relationship(back_populates="user")
-    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class App(SQLModel, table=True):
     id: UUID = Field(default_factory=lambda: uuid.uuid4(), primary_key=True)
@@ -21,7 +21,7 @@ class App(SQLModel, table=True):
     api_key_secret: str = Field(index=True, max_length=256)
     owner_id: UUID = Field(foreign_key="user.id", unique=True)
     auth_services: List["AuthService"] = Relationship(back_populates="app")
-    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AuthService(SQLModel, table=True):
     id: UUID = Field(default_factory=lambda: uuid.uuid4(), primary_key=True)
@@ -33,8 +33,8 @@ class AuthService(SQLModel, table=True):
     enabled: bool = Field(default=False, index=True)
     user: Optional[User] = Relationship(back_populates="auth_services")
     app: Optional[App] = Relationship(back_populates="auth_services")
-    expiration_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC) + timedelta(days=365))
-    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    expiration_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=365))
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class Auth(SQLModel, table=True):
@@ -42,5 +42,5 @@ class Auth(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="user.id", unique=True, index=True)
     password_hash: Optional[str] = Field(max_length=256)
     token_type: Optional[str] = Field(default="bearer", nullable=False)
-    expires_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC) + timedelta(days=90))
-    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    expires_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=90))
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))

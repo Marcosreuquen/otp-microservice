@@ -2,10 +2,14 @@
 
 A production-ready **One-Time Password (OTP) microservice** built with modern Python architecture. This service provides secure multi-factor authentication capabilities with support for TOTP/OTP generation, verification, and delivery across multiple channels (Email, SMS, WhatsApp).
 
-[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-blue.svg)](https://postgresql.org)
-[![Redis](https://img.shields.io/badge/Redis-7+-red.svg)](https://redis.io)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-4169E1?logo=postgresql&logoColor=white)](https://postgresql.org)
+[![Redis](https://img.shields.io/badge/Redis-7+-DC382D?logo=redis&logoColor=white)](https://redis.io)
+[![CI](https://github.com/marcosreuquen/otp-microservice/actions/workflows/ci.yml/badge.svg)](https://github.com/marcosreuquen/otp-microservice/actions/workflows/ci.yml)
+![Coverage](https://img.shields.io/badge/coverage-66%25-yellow)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## 🚀 Key Features
 
@@ -64,7 +68,7 @@ app/
 ## 🛠️ Development Setup
 
 ### Prerequisites
-- Python 3.12+
+- Python 3.10+
 - PostgreSQL 13+
 - Redis 7+
 - Docker & Docker Compose (recommended)
@@ -85,6 +89,9 @@ source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Install git hooks (updates coverage badge automatically)
+bash scripts/install-hooks.sh
 
 # Set up environment
 cp .env.example .env
@@ -131,8 +138,14 @@ pytest
 # Run with verbose output
 pytest -v
 
-# Generate coverage report
-pytest --cov=app --cov-report=html
+# View coverage report
+open reports/coverage_html/index.html
+
+# Run tests quietly without coverage analysis
+pytest --no-cov
+
+# Run specific tests
+pytest tests/lib/test_redis_service.py -v
 ```
 
 ### Test Artifacts
@@ -140,6 +153,26 @@ The project generates comprehensive test reports:
 - `reports/junit.xml` - JUnit XML format for CI/CD integration
 - `reports/coverage.xml` - Coverage data in XML format
 - `reports/coverage_html/` - Interactive HTML coverage report
+- `reports/coverage.json` - Coverage data in JSON format (for badge updates)
+
+### Git Hooks & Automation
+The project includes pre-commit hooks that automatically update the coverage badge:
+
+```bash
+# Install git hooks
+bash scripts/install-hooks.sh
+
+# Manually update coverage badge
+bash scripts/update-coverage-badge.sh
+
+# Skip hooks for a specific commit
+git commit --no-verify
+```
+
+The pre-commit hook automatically:
+- Runs tests when Python files are modified
+- Updates the coverage badge in README.md
+- Stages the updated README.md for commit
 
 ### Code Quality
 - **Type Safety**: Full type hints with mypy compatibility

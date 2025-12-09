@@ -1,0 +1,38 @@
+#!/bin/bash
+# Pre-commit hook to update coverage badge
+
+# Get the root directory of the git repository
+ROOT_DIR=$(git rev-parse --show-toplevel)
+cd "$ROOT_DIR"
+
+# Check if README.md is being committed
+if git diff --cached --name-only | grep -q "^README.md$"; then
+    echo "README.md is being committed, skipping coverage update to avoid conflicts"
+    exit 0
+fi
+
+# Check if any Python files or test files are being committed
+PYTHON_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(py)$' || true)
+
+if [ -z "$PYTHON_FILES" ]; then
+    # No Python files changed, skip coverage update
+    exit 0
+fi
+
+echo "Python files detected in commit. Updating coverage badge..."
+
+# Run the coverage update script
+if [ -f "scripts/update-coverage-badge.sh" ]; then
+    bash scripts/update-coverage-badge.sh
+
+    # Check if README.md was modified
+    if git diff --name-only | grep -q "^README.md$"; then
+        # Stage the updated README.md
+        git add README.md
+        echo "✓ README.md coverage badge updated and staged"
+    fi
+else
+    echo "Warning: Coverage update script not found"
+fi
+
+exit 0

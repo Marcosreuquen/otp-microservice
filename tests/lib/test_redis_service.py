@@ -24,6 +24,7 @@ class TestRedisService:
         mock_redis.get = AsyncMock()
         mock_redis.delete = AsyncMock()
         mock_redis.exists = AsyncMock()
+        mock_redis.ttl = AsyncMock()
         mock_redis.pipeline = MagicMock()
         mock_redis.hset = AsyncMock()
         mock_redis.hgetall = AsyncMock()

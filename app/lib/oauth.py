@@ -1,6 +1,6 @@
 from uuid import UUID
-from jose import JWTError, jwt
-from datetime import datetime, timedelta, UTC
+import jwt
+from datetime import datetime, timedelta, timezone
 
 from app.schemas import schemas
 from app.utils.errors import require, Unauthorized, BadRequest
@@ -8,7 +8,7 @@ from config import settings
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"expiration_date": str(expire)})
 
     encoded_jwt = jwt.encode(
@@ -21,7 +21,7 @@ def create_access_token(data: dict):
 def verify_access_token(token: str):
     try:
         payload = jwt.decode(
-            token=token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            jwt=token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
 
         id: UUID = payload.get("id")
@@ -35,7 +35,7 @@ def verify_access_token(token: str):
 
         token_data = schemas.TokenData(id=id, expiration_date=expiration_date)
         return token_data
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise Unauthorized("Invalid token")
 
 

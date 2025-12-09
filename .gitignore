@@ -1,7 +1,7 @@
 __pycache__
 .idea
 venv
-venv
+.venv
 data
 .env
 notes/
@@ -11,4 +11,4 @@ notes.md.bak
 .pytest_cache
 logs
 reports
-.vscode
+.vscodereports/

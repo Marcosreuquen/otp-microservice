@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from app.models.tables import Auth, User
@@ -9,7 +9,7 @@ def create_auth_record(user: User, password_hash: str, session: Session):
         user_id=user.id,
         password_hash=password_hash,
         token_type="bearer",
-        expires_at=datetime.now(UTC) + timedelta(days=30))
+        expires_at=datetime.now(timezone.utc) + timedelta(days=30))
 
     session.add(auth_record)
     session.commit()

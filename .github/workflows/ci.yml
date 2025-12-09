@@ -16,13 +16,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
 
       - name: Run tests
         env:
@@ -40,10 +39,11 @@ jobs:
           POSTGRES_PASSWORD: "test"
           POSTGRES_DB: "test"
           POSTGRES_HOST: "localhost"
-          REDIS_URL: "redis://localhost:6379"
+          REDIS_URL: "redis://localhost:6379/0"
+          REDIS_FALLBACK: "redis://localhost:6379/1"
           ENV: "test"
         run: |
-          pytest -q
+          pytest
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:

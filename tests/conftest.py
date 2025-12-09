@@ -1,6 +1,11 @@
 import sys
 import time
+import os
 from pathlib import Path
+
+# Set Redis URL for tests BEFORE any imports that might use it
+if 'REDIS_URL' not in os.environ or os.environ.get('REDIS_URL') == 'your_redis_url':
+    os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
 
 # Ensure the project root is on sys.path so test imports like `import app...` work
 ROOT = Path(__file__).resolve().parents[1]
